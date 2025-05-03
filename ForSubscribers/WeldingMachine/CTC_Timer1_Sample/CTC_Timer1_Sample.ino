@@ -1,74 +1,70 @@
-/*
-  Сгенерирует последовательность HIGH = 50 мкс. -> LOW 100 мкс. -> HIGH 70 мкс.
-  Можно отрегулировать задержки и в нормальную функцию это обернуть, чтобы вызывать ее по нажатию на кнопку например.
-*/
-
-
-
-// Пины
-const uint8_t outputPin = 9; // OC1A (Arduino)
-
-// Длительности в микросекундах
-const uint16_t high1_us = 50;
-const uint16_t low_us   = 100;
-const uint16_t high2_us = 70;
+// Сдесь теперь не нужно указывать значение переменных
+uint16_t pulse_high1 = 0;
+uint16_t pulse_low = 0;
+uint16_t pulse_high2 = 0;
 
 volatile uint8_t phase = 0;
+volatile bool sequenceActive = false;
+
+
+void setup() {  
+  DDRB |= (1 << DDB1);  // Устанавливаем бит 1 порта B как выход. Это вместо pinMode(9, OUTPUT)
+}
 
 
 
-void startPulseSequence() {
-  cli(); // Отключаем прерывания
-  phase = 0;
+// Вызываем эту функцию, чтобы начать последовательность, на вход подаются значения также в микросекундах. Ниже 10 мкс нельзя
+void startPulseSequence(uint16_t high1_us, uint16_t low_us, uint16_t high2_us) {
+  if (sequenceActive) return;  // Проверка, если последовательность еще не закончена то выход
+  sequenceActive = true;
 
-  // Настраиваем Timer1 в режиме CTC (WGM12), предделитель 8 (0.5 мкс на тик)
-  TCCR1A = 0;
-  TCCR1B = (1 << WGM12) | (1 << CS11); // CTC, prescaler 8
+  pulse_high1 = high1_us;
+  pulse_low   = low_us;
+  pulse_high2 = high2_us;  
+
+  cli();
+  
   TCNT1 = 0;
-  OCR1A = high1_us * 2; // 0.5 мкс на тик => *2
+  phase = 0; 
 
-  TIMSK1 |= (1 << OCIE1A); // Разрешаем прерывание по совпадению
+  TCCR1A = (1 << COM1A0);  // Именно это аппаратно переключит при совпадении с HIGH на LOW (и наоброт) , когда TCNT1 == OCR1A
+  TCCR1B = (1 << WGM12) | (1 << CS11);
 
-  sei(); // Включаем прерывания
+  TIMSK1 = (1 << OCIE1A);
+  
+  OCR1A = 10; // Для того чтобы таймер гарантированно отработал первое прерывание. Ниже задержку ставить нельзя. (По крайней мере все мои китайцы глючат если так не делать)
+  sei();  
 }
 
 
 
 ISR(TIMER1_COMPA_vect) {
+  phase++;  
+
   switch (phase) {
-    case 0:
-      digitalWrite(outputPin, HIGH);
-      OCR1A = high1_us * 2;
-      phase = 1;
+    case 1:      
+      OCR1A = pulse_high1 * 2;      
       break;
-    case 1:
-      digitalWrite(outputPin, LOW);
-      OCR1A = low_us * 2;
-      phase = 2;
+    case 2:      
+      OCR1A = pulse_low * 2;      
       break;
-    case 2:
-      digitalWrite(outputPin, HIGH);
-      OCR1A = high2_us * 2;
-      phase = 3;
+    case 3:      
+      OCR1A = pulse_high2 * 2;
       break;
-    case 3:
-      digitalWrite(outputPin, LOW);
-      TCCR1B = 0;        // Остановить таймер
-      TIMSK1 &= ~(1 << OCIE1A); // Отключить прерывания
+    case 4:
+      TCCR1B = 0; // отключаем таймер      
+      TCNT1 = 0;
+      OCR1A = 0;
+      TIMSK1 = 0;
+      TCCR1A = 0;
+      sequenceActive = false;  // Флаг завершения последовательности
       break;
   }
 }
 
 
 
-void setup() {
-  pinMode(outputPin, OUTPUT);
-  digitalWrite(outputPin, LOW);  
-}
-
-
-
 void loop() {
-  startPulseSequence();
-  delay(3000);
+  startPulseSequence(80, 50, 170);  // Ниже 10 мкс. устанавливать нельзя
+  delay(500);
 }
