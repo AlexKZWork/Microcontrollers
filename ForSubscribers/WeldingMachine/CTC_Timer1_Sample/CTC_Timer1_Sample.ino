@@ -67,4 +67,8 @@ ISR(TIMER1_COMPA_vect) {
 void loop() {
   startPulseSequence(80, 50, 170);  // Ниже 10 мкс. устанавливать нельзя
   delay(500);
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> e8105d531e4f6c2e276570b0efe09237c338cbe0
