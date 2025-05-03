@@ -7,16 +7,8 @@
 ### Arduino
 Примеры и тесты для Arduino Uno, Nano и других плат на базе AVR.
 
-- `PWM1` — Генерация одиночных импульсов с таймером
-- `EEPROM_Test` — Чтение/запись во внутреннюю память
-- `IR_Receiver` — Работа с ИК-приёмником и пультами
-
 ### RP2040
 Проекты и эксперименты на базе Raspberry Pi Pico и Pico Zero.
-
-- `LittleFS_Text_Sample` — Пример работы с LittleFS
-- `SPI_Display_Test` — Управление SPI-дисплеем
-- `PWM_Compare` — Настройка точного ШИМ
 
 ## Как использовать
 
