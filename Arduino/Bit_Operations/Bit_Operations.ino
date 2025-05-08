@@ -99,6 +99,17 @@ void setup() {
   a &= ~(1 << 3);
   printByteBin(a);
   Serial.println(" результат");
+
+  // Пример инверсии битов с помощью XOR и битовой маски
+  a = 0b10101100;
+  mask = 0b00000110;
+  Serial.println("\nПример инверсии битов");
+  printByteBin(a);
+  Serial.println(" оригинал");
+  a ^= mask;
+  printByteBin(a);
+  Serial.print(" после инверсии по маске ");
+  printByteBin(mask);
 }
 
 void loop() {
