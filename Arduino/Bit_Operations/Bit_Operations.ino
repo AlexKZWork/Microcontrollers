@@ -59,7 +59,7 @@ void setup() {
   printByteBin((a ^ b));
   Serial.println();
 
-  Serial.println("\nЛогическое НЕ (NOT)");
+  Serial.println("\Побитовая инверсия");
   Serial.print("~");
   printByteBin(a);
   Serial.print(" = ");
